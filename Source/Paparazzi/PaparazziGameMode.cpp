@@ -12,4 +12,10 @@ APaparazziGameMode::APaparazziGameMode()
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
+
+}
+
+void APaparazziGameMode::BeginPlay() {
+	// Add the HUD to the screen
+	AddStaminaHUD();
 }

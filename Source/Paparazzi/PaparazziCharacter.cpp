@@ -9,6 +9,8 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 
+const float APaparazziCharacter::MAXDASHSTAMINA = 5.f;
+
 //////////////////////////////////////////////////////////////////////////
 // APaparazziCharacter
 
@@ -35,6 +37,7 @@ APaparazziCharacter::APaparazziCharacter()
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
+	CameraBoom->bAbsoluteRotation = true; // Don't want arm to rotate when character does
 	CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
@@ -45,6 +48,53 @@ APaparazziCharacter::APaparazziCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
+
+
+	// Set Dash Paramters
+	Dashing = false;
+	DashTime = MAXDASHSTAMINA;
+	DashSpeedMultiplier = 1.5;
+
+}
+
+void APaparazziCharacter::BeginPlay() {
+	Super::BeginPlay();
+
+	// Set Walk Speed
+	UCharacterMovementComponent* MovementComponent = Cast<UCharacterMovementComponent>(GetMovementComponent());
+	WalkSpeed = MovementComponent->MaxWalkSpeed;
+	OrignalAcceleration = MovementComponent->MaxAcceleration;
+}
+
+// Called every frame
+void APaparazziCharacter::Tick(float DeltaTime) {
+	Super::Tick(DeltaTime);
+
+	// Subtract Dash Stamina
+	if (Dashing && DashTime > 0.f) {
+		UCharacterMovementComponent* MovementComponent = Cast<UCharacterMovementComponent>(GetMovementComponent());
+		MovementComponent->MaxWalkSpeed = WalkSpeed * DashSpeedMultiplier;
+		MovementComponent->MaxAcceleration = OrignalAcceleration * DashSpeedMultiplier;
+		DashTime -= DeltaTime;
+		if (DashTime < 0.f) {
+			DashTime = 0.f;
+		}
+	} else {
+		UCharacterMovementComponent* MovementComponent = Cast<UCharacterMovementComponent>(GetMovementComponent());
+		MovementComponent->MaxWalkSpeed = WalkSpeed;
+		MovementComponent->MaxAcceleration = OrignalAcceleration;
+		if (!Dashing && DashTime < MAXDASHSTAMINA) {
+			DashTime += DeltaTime;
+			if (DashTime > MAXDASHSTAMINA) {
+				DashTime = MAXDASHSTAMINA;
+			}
+		}
+	}
+
+}
+
+float APaparazziCharacter::GetDashStaminaRate() {
+	return DashTime / MAXDASHSTAMINA;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -54,28 +104,24 @@ void APaparazziCharacter::SetupPlayerInputComponent(class UInputComponent* Playe
 {
 	// Set up gameplay key bindings
 	check(PlayerInputComponent);
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	PlayerInputComponent->BindAction("Dash", IE_Pressed, this, &APaparazziCharacter::StartDashing);
+	PlayerInputComponent->BindAction("Dash", IE_Released, this, &APaparazziCharacter::StopDashing);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &APaparazziCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &APaparazziCharacter::MoveRight);
 
-	// We have 2 versions of the rotation bindings to handle different kinds of devices differently
-	// "turn" handles devices that provide an absolute delta, such as a mouse.
-	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("TurnRate", this, &APaparazziCharacter::TurnAtRate);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("LookUpRate", this, &APaparazziCharacter::LookUpAtRate);
-
 	// handle touch devices
 	PlayerInputComponent->BindTouch(IE_Pressed, this, &APaparazziCharacter::TouchStarted);
 	PlayerInputComponent->BindTouch(IE_Released, this, &APaparazziCharacter::TouchStopped);
-
-	// VR headset functionality
-	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &APaparazziCharacter::OnResetVR);
 }
 
+void APaparazziCharacter::StartDashing() {
+	Dashing = true;
+}
+
+void APaparazziCharacter::StopDashing() {
+	Dashing = false;
+}
 
 void APaparazziCharacter::OnResetVR()
 {
@@ -84,24 +130,12 @@ void APaparazziCharacter::OnResetVR()
 
 void APaparazziCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
 {
-		Jump();
+		StartDashing();
 }
 
 void APaparazziCharacter::TouchStopped(ETouchIndex::Type FingerIndex, FVector Location)
 {
-		StopJumping();
-}
-
-void APaparazziCharacter::TurnAtRate(float Rate)
-{
-	// calculate delta for this frame from the rate information
-	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
-}
-
-void APaparazziCharacter::LookUpAtRate(float Rate)
-{
-	// calculate delta for this frame from the rate information
-	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+		StopDashing();
 }
 
 void APaparazziCharacter::MoveForward(float Value)

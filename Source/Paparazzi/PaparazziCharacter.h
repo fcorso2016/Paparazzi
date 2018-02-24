@@ -30,6 +30,19 @@ public:
 	float BaseLookUpRate;
 
 protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:
+
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	/** Gets the current amount of dash stamina left */
+	UFUNCTION(BlueprintPure, Category = "Dashing")
+	float GetDashStaminaRate();
+
+protected:
 
 	/** Resets HMD orientation in VR. */
 	void OnResetVR();
@@ -40,23 +53,17 @@ protected:
 	/** Called for side to side input */
 	void MoveRight(float Value);
 
-	/** 
-	 * Called via input to turn at a given rate. 
-	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
-	 */
-	void TurnAtRate(float Rate);
-
-	/**
-	 * Called via input to turn look up/down at a given rate. 
-	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
-	 */
-	void LookUpAtRate(float Rate);
-
 	/** Handler for when a touch input begins. */
 	void TouchStarted(ETouchIndex::Type FingerIndex, FVector Location);
 
 	/** Handler for when a touch input stops. */
 	void TouchStopped(ETouchIndex::Type FingerIndex, FVector Location);
+
+	/** Handler for when dashing begins */
+	void StartDashing();
+
+	/** Handler for when dashing ends */
+	void StopDashing();
 
 protected:
 	// APawn interface
@@ -68,5 +75,25 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+private:
+	/** Boolean to determine if dashing is happening */
+	bool Dashing;
+
+	/** Time left for dash */
+	float DashTime;
+
+	/** Speed factor when dashing */
+	UPROPERTY(EditDefaultsOnly, Category = "Dashing")
+	float DashSpeedMultiplier;
+
+	/** Original Walk Speed */
+	float WalkSpeed;
+
+	/** Original Acceleration */
+	float OrignalAcceleration;
+
+	static const float MAXDASHSTAMINA;
+
 };
 

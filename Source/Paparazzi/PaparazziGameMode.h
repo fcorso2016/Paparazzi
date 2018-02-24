@@ -13,6 +13,16 @@ class APaparazziGameMode : public AGameModeBase
 
 public:
 	APaparazziGameMode();
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "UI")
+	void AddStaminaHUD();
+
 };
 
 
