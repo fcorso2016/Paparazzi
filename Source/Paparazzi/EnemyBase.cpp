@@ -13,9 +13,8 @@ AEnemyBase::AEnemyBase() {
 	// Set the pawn sensing component
 	PawnSensing = CreateDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensing"));
 
-	// Set radius that trips being caught
-	DetectionRadius = CreateDefaultSubobject<USphereComponent>(TEXT("AttackingRadius"));
-	DetectionRadius->SetupAttachment(RootComponent);
+	// Start to wander and begin tick every second
+	WanderTick = 0.f;
 
 }
 
@@ -29,6 +28,12 @@ void AEnemyBase::BeginPlay() {
 void AEnemyBase::Tick(float DeltaTime) {
 	Super::Tick(DeltaTime);
 
+	// Advance Wander Tick and Wander if at zero
+	WanderTick -= DeltaTime;
+	if (WanderTick <= 0.f) {
+		WanderTick = 5.f;
+		Wander(WanderBounds);
+	}
 }
 
 // Called to bind functionality to input
@@ -40,6 +45,7 @@ void AEnemyBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 void AEnemyBase::OnSeeCharacter_Implementation(APawn* Pawn, float AcceptanceRadius) {
 	if (Pawn->IsA(APaparazziCharacter::StaticClass())) {
 		AAIController* Controller = Cast<AAIController>(GetController());
+		//Controller->MoveToActor(Pawn, AcceptanceRadius);
 		FVector PlayerPos = Pawn->GetActorLocation();
 		Controller->MoveToLocation(PlayerPos, AcceptanceRadius);
 	}
