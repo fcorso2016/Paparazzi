@@ -26,6 +26,10 @@ void UPaparazziGameInstance::LoseLife() {
 	}
 }
 
+void UPaparazziGameInstance::ResetLives() {
+	Lives = 2;
+}
+
 bool UPaparazziGameInstance::IsGameOver() const {
 	return Lives == 0;
 }

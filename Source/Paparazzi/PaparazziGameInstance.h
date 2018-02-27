@@ -23,6 +23,8 @@ public:
 		void Get1UP();
 	UFUNCTION(BlueprintCallable, Category = "Lives")
 		void LoseLife();
+	UFUNCTION(BlueprintCallable, Category = "Lives")
+		void ResetLives();
 	UFUNCTION(BlueprintPure, Category = "Live")
 		bool IsGameOver() const;
 

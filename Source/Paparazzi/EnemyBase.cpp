@@ -45,9 +45,9 @@ void AEnemyBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 void AEnemyBase::OnSeeCharacter_Implementation(APawn* Pawn, float AcceptanceRadius) {
 	if (Pawn->IsA(APaparazziCharacter::StaticClass())) {
 		AAIController* Controller = Cast<AAIController>(GetController());
-		//Controller->MoveToActor(Pawn, AcceptanceRadius);
-		FVector PlayerPos = Pawn->GetActorLocation();
-		Controller->MoveToLocation(PlayerPos, AcceptanceRadius);
+		Controller->MoveToActor(Pawn, AcceptanceRadius);
+		//FVector PlayerPos = Pawn->GetActorLocation();
+		//Controller->MoveToLocation(PlayerPos, AcceptanceRadius);
 	}
 }
 
