@@ -7,12 +7,8 @@
 #include "PaparazziGameMode.generated.h"
 
 UCLASS(minimalapi)
-class APaparazziGameMode : public AGameModeBase
-{
+class APaparazziGameMode : public AGameModeBase {
 	GENERATED_BODY()
-
-public:
-	APaparazziGameMode();
 
 protected:
 	// Called when the game starts or when spawned
